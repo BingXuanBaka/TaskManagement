@@ -1,4 +1,4 @@
-package com.bingxuan.taskmanagement.Pages
+package com.bingxuan.taskmanagement.pages
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
