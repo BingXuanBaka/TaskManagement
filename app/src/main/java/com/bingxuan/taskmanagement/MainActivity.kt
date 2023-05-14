@@ -11,15 +11,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
-import com.bingxuan.taskmanagement.Pages.MainPage
+import com.bingxuan.taskmanagement.pages.AddPage
+import com.bingxuan.taskmanagement.pages.MainPage
 import com.bingxuan.taskmanagement.ui.theme.TaskManagementTheme
-import java.util.*
-
-data class Task(
-    var name: String,
-    var completed: Boolean,
-    var date: Date? = null,
-)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,7 +29,7 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
                 ) {
-                    MainPage()
+                    AddPage()
                 }
             }
         }
