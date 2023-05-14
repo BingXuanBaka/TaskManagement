@@ -38,5 +38,5 @@ fun parseDate(date: Date): String{
         return "后天 $parsedTime"
     }
 
-    return "${cal.get(Calendar.YEAR) + 1900}/${cal.get(Calendar.MONTH) + 1}/${cal.get(Calendar.DAY_OF_MONTH)} $parsedTime"
+    return "${cal.get(Calendar.YEAR)}/${cal.get(Calendar.MONTH) + 1}/${cal.get(Calendar.DAY_OF_MONTH)} $parsedTime"
 }
