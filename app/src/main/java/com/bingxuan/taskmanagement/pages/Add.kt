@@ -26,17 +26,9 @@ fun AddPage(navController: NavController) {
         mutableStateOf(null)
     }
 
-    var dateSelectMenuExpanded by remember {
-        mutableStateOf(false)
-    }
-
-
-
     Scaffold(topBar = {
         TopAppBar(title = { Text("新增代办") }, navigationIcon = {
-            IconButton(
-                onClick = {navController.popBackStack() }
-            ) {
+            IconButton(onClick = { navController.popBackStack() }) {
                 Icon(
                     painter = painterResource(id = R.drawable.baseline_arrow_back_24),
                     contentDescription = "返回"
@@ -49,31 +41,6 @@ fun AddPage(navController: NavController) {
         Box(
             modifier = Modifier.padding(padding),
         ) {
-            var dateDialogOpen by remember {
-                mutableStateOf(false)
-            }
-            var timeDialogOpen by remember {
-                mutableStateOf(false)
-            }
-
-            var newDate: Date? by remember {
-                mutableStateOf(null)
-            }
-            DateDialog(
-                dateDialogOpen,
-                { date ->
-                    newDate = date
-                    dateDialogOpen = false
-                    timeDialogOpen = true
-                },
-                onDismiss = { dateDialogOpen = false })
-
-            TimeDialog(timeDialogOpen, { hour, minute ->
-                newDate?.hours = hour
-                newDate?.minutes  = minute
-                date = newDate
-                timeDialogOpen = false
-            },{timeDialogOpen = false})
 
             Column(
                 modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End
@@ -84,74 +51,8 @@ fun AddPage(navController: NavController) {
                         .fillMaxWidth(),
                     label = { Text("名称") },
                     onValueChange = { value -> name = value })
-                ListItem(
-                    headlineContent = {
-                        Text(date?.let { "${parseDate(it)} 后提醒" } ?: "不提醒")
-                    },
-                    leadingContent = {
-                        Icon(
-                            painter = painterResource(
-                                id = if (date == null) {
-                                    R.drawable.baseline_calendar_today_24
-                                } else {
-                                    R.drawable.baseline_today_24
-                                }
-                            ), contentDescription = "日期"
-                        )
-                    },
-                    trailingContent = {
-                        DropdownMenu(
-                            expanded = dateSelectMenuExpanded,
-                            onDismissRequest = { dateSelectMenuExpanded = false },
-                        ) {
-                            DropdownMenuItem(onClick = {
-                                date = null
-                                dateSelectMenuExpanded = false
-                            }, text = {
-                                Text("不提醒")
-                            })
 
-                            DropdownMenuItem(onClick = {
-                                dateDialogOpen = true
-                                dateSelectMenuExpanded = false
-
-                            }, text = {
-                                Text("选择提醒日期")
-                            })
-
-                            Divider()
-
-                            DropdownMenuItem(onClick = {
-                                newDate = Date()
-                                newDate?.let { it.time += 1 * 24 * 60 * 60 * 1000 }
-
-                                dateSelectMenuExpanded = false
-                                timeDialogOpen = true
-                            }, text = {
-                                Text("明天")
-                            })
-
-                            DropdownMenuItem(onClick = {
-                                newDate = Date()
-                                newDate?.let { it.time += 2 * 24 * 60 * 60 * 1000 }
-
-                                dateSelectMenuExpanded = false
-                                timeDialogOpen = true
-                            }, text = {
-                                Text("后天")
-                            })
-                        }
-                    },
-
-                    modifier = Modifier.clickable(
-                        interactionSource = MutableInteractionSource(),
-                        indication = rememberRipple(),
-                        onClick = {
-                            dateSelectMenuExpanded = true
-                        }
-                    )
-
-                )
+                OptionsList(date) { newDate -> date = newDate }
 
                 Row(
                     modifier = Modifier.padding(12.dp),
@@ -161,7 +62,7 @@ fun AddPage(navController: NavController) {
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.baseline_add_24),
-                            contentDescription = "取消"
+                            contentDescription = "添加"
                         )
                         Text("添加")
                     }
@@ -172,27 +73,135 @@ fun AddPage(navController: NavController) {
     }
 }
 
+@Composable
+private fun OptionsList(
+    date: Date?, setDate: (date: Date?) -> Unit
+) {
+    var dateSelectMenuExpanded by remember {
+        mutableStateOf(false)
+    }
+
+    ListItem(headlineContent = {
+        Text(date?.let { "${parseDate(it)} 后提醒" } ?: "不提醒")
+    }, leadingContent = {
+        Icon(
+            painter = painterResource(
+                id = if (date == null) {
+                    R.drawable.baseline_calendar_today_24
+                } else {
+                    R.drawable.baseline_today_24
+                }
+            ), contentDescription = "日期"
+        )
+    }, trailingContent = {
+        DateSelectMenu(
+            dateSelectMenuExpanded,
+            { expanded: Boolean -> dateSelectMenuExpanded = expanded },
+            setDate
+        )
+    },
+
+        modifier = Modifier.clickable(interactionSource = MutableInteractionSource(),
+            indication = rememberRipple(),
+            onClick = {
+                dateSelectMenuExpanded = true
+            })
+
+    )
+}
+
+@Composable
+private fun DateSelectMenu(
+    menuExpanded: Boolean,
+    setMenuExpanded: (expanded: Boolean) -> Unit,
+    setDate: (date: Date?) -> Unit
+) {
+    var newDate: Date? by remember {
+        mutableStateOf(null)
+    }
+
+    var dateDialogOpen by remember {
+        mutableStateOf(false)
+    }
+    var timeDialogOpen by remember {
+        mutableStateOf(false)
+    }
+
+    val oneDay = 1 * 24 * 60 * 60 * 1000
+
+    DateDialog(dateDialogOpen, { date ->
+        newDate = date
+        dateDialogOpen = false
+        timeDialogOpen = true
+    }, onDismiss = { dateDialogOpen = false })
+
+    TimeDialog(timeDialogOpen, { hour, minute ->
+        newDate?.hours = hour
+        newDate?.minutes = minute
+        setDate(newDate)
+        timeDialogOpen = false
+    }, { timeDialogOpen = false })
+
+    DropdownMenu(
+        expanded = menuExpanded,
+        onDismissRequest = { setMenuExpanded(false) },
+    ) {
+        DropdownMenuItem(onClick = {
+            setDate(null)
+            setMenuExpanded(false)
+        }, text = {
+            Text("不提醒")
+        })
+
+        DropdownMenuItem(onClick = {
+            dateDialogOpen = true
+            setMenuExpanded(false)
+        }, text = {
+            Text("选择提醒日期")
+        })
+
+        Divider()
+
+        DropdownMenuItem(onClick = {
+            newDate = Date()
+            newDate?.let { it.time += oneDay }
+
+            setMenuExpanded(false)
+            timeDialogOpen = true
+        }, text = {
+            Text("明天")
+        })
+
+        DropdownMenuItem(onClick = {
+            newDate = Date()
+            newDate?.let { it.time += oneDay }
+
+            setMenuExpanded(false)
+            timeDialogOpen = true
+        }, text = {
+            Text("后天")
+        })
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DateDialog(
     open: Boolean, onAccept: (date: Date) -> Unit, onDismiss: () -> Unit
 ) {
     val datePickerState = rememberDatePickerState()
-    if(open) DatePickerDialog(
-        confirmButton = {
-            TextButton(
-                onClick = { onAccept(Date(datePickerState.selectedDateMillis ?: 0)) },
-                enabled = datePickerState.selectedDateMillis != null
-            ) {
-                Text(text = "确定")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = "取消")
-            }
-        },
-        onDismissRequest = onDismiss
+    if (open) DatePickerDialog(confirmButton = {
+        TextButton(
+            onClick = { onAccept(Date(datePickerState.selectedDateMillis ?: 0)) },
+            enabled = datePickerState.selectedDateMillis != null
+        ) {
+            Text(text = "确定")
+        }
+    }, dismissButton = {
+        TextButton(onClick = onDismiss) {
+            Text(text = "取消")
+        }
+    }, onDismissRequest = onDismiss
     ) {
         DatePicker(state = datePickerState)
     }
@@ -201,16 +210,12 @@ fun DateDialog(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimeDialog(
-    open: Boolean,
-    onAccept: (hour: Int, minute: Int) -> Unit,
-    onDismiss: () -> Unit
+    open: Boolean, onAccept: (hour: Int, minute: Int) -> Unit, onDismiss: () -> Unit
 ) {
     val timePickerState = rememberTimePickerState()
-    if(open) DatePickerDialog(
+    if (open) DatePickerDialog(
         confirmButton = {
-            TextButton(
-                onClick = { onAccept(timePickerState.hour,timePickerState.minute) }
-            ) {
+            TextButton(onClick = { onAccept(timePickerState.hour, timePickerState.minute) }) {
                 Text(text = "确定")
             }
         },
@@ -223,8 +228,9 @@ fun TimeDialog(
         onDismissRequest = onDismiss,
     ) {
         TimePicker(
-            state = timePickerState,
-            modifier = Modifier.padding(8.dp, 12.dp).fillMaxWidth()
+            state = timePickerState, modifier = Modifier
+                .padding(8.dp, 12.dp)
+                .fillMaxWidth()
         )
     }
 }

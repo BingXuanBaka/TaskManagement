@@ -13,60 +13,9 @@ import com.bingxuan.taskmanagement.Task
 import com.bingxuan.taskmanagement.ui.theme.TaskManagementTheme
 import java.util.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainPage(navController: NavHostController) {
     var searchQuery by remember { mutableStateOf("") }
-    TaskManagementTheme {
-        Scaffold(
-            topBar = {
-                SearchBar(
-                    modifier = Modifier
-                        .padding(12.dp, 0.dp)
-                        .fillMaxWidth(),
-                    query = searchQuery,
-                    onQueryChange = { content -> searchQuery = content },
-                    onSearch = { content -> println(content) },
-                    active = false,
-                    onActiveChange = {},
-                    placeholder = { Text("搜索代办事项") },
-                    leadingIcon = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_search_24),
-                            contentDescription = "搜索"
-                        )
-                    },
-                ) {}
-            },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = {
-                        navController.navigate("add") {
-                            launchSingleTop = true
-                        }
-                    }
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_add_24),
-                        contentDescription = "添加"
-                    )
-                }
-            }
-        ) { contentPadding ->
-            Box(modifier = Modifier.padding(contentPadding)) {
-                TaskItemsContainer()
-            }
-        }
-    }
-}
-
-@Composable
-fun TopSearchBar(){
-
-}
-
-@Composable
-fun TaskItemsContainer() {
     val taskList by remember {
         mutableStateOf(
             mutableStateListOf(
@@ -77,6 +26,52 @@ fun TaskItemsContainer() {
         )
     }
 
+    TaskManagementTheme {
+        Scaffold(topBar = {
+            SearchBar(searchQuery) { query -> searchQuery = query }
+        }, floatingActionButton = {
+            FloatingActionButton(onClick = {
+                navController.navigate("add") {
+                    launchSingleTop = true
+                }
+            }) {
+                Icon(
+                    painter = painterResource(id = R.drawable.baseline_add_24),
+                    contentDescription = "添加"
+                )
+            }
+        }) { contentPadding ->
+            Box(modifier = Modifier.padding(contentPadding)) {
+                TaskItemsContainer(taskList)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SearchBar(searchQuery: String, setSearchQuery: (query: String) -> Unit) {
+    SearchBar(
+        modifier = Modifier
+            .padding(12.dp, 0.dp)
+            .fillMaxWidth(),
+        query = searchQuery,
+        onQueryChange = { content -> setSearchQuery(content) },
+        onSearch = { content -> println(content) },
+        active = false,
+        onActiveChange = {},
+        placeholder = { Text("搜索代办事项") },
+        leadingIcon = {
+            Icon(
+                painter = painterResource(id = R.drawable.baseline_search_24),
+                contentDescription = "搜索"
+            )
+        },
+    ) {}
+}
+
+@Composable
+private fun TaskItemsContainer(taskList: MutableList<Task>) {
     LazyColumn {
         item {
             taskList.forEachIndexed { index, task ->
@@ -84,9 +79,7 @@ fun TaskItemsContainer() {
                     Text(task.name)
                 }, trailingContent = {
                     Checkbox(checked = taskList[index].completed, onCheckedChange = { checked ->
-
                         taskList[index] = task.copy(completed = checked)
-
                     })
                 })
             }
