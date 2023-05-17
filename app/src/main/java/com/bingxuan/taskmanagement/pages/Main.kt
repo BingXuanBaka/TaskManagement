@@ -6,26 +6,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.bingxuan.taskmanagement.R
 import com.bingxuan.taskmanagement.Task
 import com.bingxuan.taskmanagement.ui.theme.TaskManagementTheme
 import java.util.*
 
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    MainPage()
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainPage() {
-    var menuExpanded by remember {
-        mutableStateOf(false)
-    }
-
+fun MainPage(navController: NavHostController) {
     var searchQuery by remember { mutableStateOf("") }
     TaskManagementTheme {
         Scaffold(
@@ -46,35 +36,15 @@ fun MainPage() {
                             contentDescription = "搜索"
                         )
                     },
-                    trailingIcon = {
-                        IconButton(
-                            onClick = { menuExpanded = !menuExpanded }
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.baseline_more_vert_24),
-                                contentDescription = "查看选项"
-                            )
-                        }
-
-                        DropdownMenu(
-                            expanded = menuExpanded,
-                            onDismissRequest = { menuExpanded = !menuExpanded })
-                        {
-                            DropdownMenuItem(
-                                onClick = {
-                                    /* TODO */
-                                },
-                                text = {
-                                    Text("设置")
-                                }
-                            )
-                        }
-                    }
                 ) {}
             },
             floatingActionButton = {
                 FloatingActionButton(
-                    onClick = { /* TODO */ }
+                    onClick = {
+                        navController.navigate("add") {
+                            launchSingleTop = true
+                        }
+                    }
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.baseline_add_24),
@@ -88,6 +58,11 @@ fun MainPage() {
             }
         }
     }
+}
+
+@Composable
+fun TopSearchBar(){
+
 }
 
 @Composable

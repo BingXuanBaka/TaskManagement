@@ -9,15 +9,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.bingxuan.taskmanagement.R
 import com.bingxuan.taskmanagement.parseDate
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddPage() {
+fun AddPage(navController: NavController) {
     var name by remember {
         mutableStateOf("")
     }
@@ -34,7 +34,9 @@ fun AddPage() {
 
     Scaffold(topBar = {
         TopAppBar(title = { Text("新增代办") }, navigationIcon = {
-            IconButton(onClick = {/* TODO */ }) {
+            IconButton(
+                onClick = {navController.popBackStack() }
+            ) {
                 Icon(
                     painter = painterResource(id = R.drawable.baseline_arrow_back_24),
                     contentDescription = "返回"
@@ -199,12 +201,16 @@ fun DateDialog(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimeDialog(
-    open: Boolean, onAccept: (hour: Int, minute: Int) -> Unit, onDismiss: () -> Unit
+    open: Boolean,
+    onAccept: (hour: Int, minute: Int) -> Unit,
+    onDismiss: () -> Unit
 ) {
     val timePickerState = rememberTimePickerState()
     if(open) DatePickerDialog(
         confirmButton = {
-            TextButton(onClick = { onAccept(timePickerState.hour,timePickerState.minute) }) {
+            TextButton(
+                onClick = { onAccept(timePickerState.hour,timePickerState.minute) }
+            ) {
                 Text(text = "确定")
             }
         },
@@ -216,12 +222,9 @@ fun TimeDialog(
 
         onDismissRequest = onDismiss,
     ) {
-        TimePicker(state = timePickerState, modifier = Modifier.padding(8.dp, 12.dp).fillMaxWidth())
+        TimePicker(
+            state = timePickerState,
+            modifier = Modifier.padding(8.dp, 12.dp).fillMaxWidth()
+        )
     }
-}
-
-@Preview
-@Composable
-fun PreviewAddPage() {
-    AddPage()
 }
