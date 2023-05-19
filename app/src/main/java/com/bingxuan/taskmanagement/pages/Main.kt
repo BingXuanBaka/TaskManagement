@@ -3,34 +3,41 @@ package com.bingxuan.taskmanagement.pages
 import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
 import androidx.navigation.NavHostController
 import com.bingxuan.taskmanagement.R
 import com.bingxuan.taskmanagement.data.Task
+import com.bingxuan.taskmanagement.data.TaskDao
 import com.bingxuan.taskmanagement.data.TaskDatabase
+import com.bingxuan.taskmanagement.data.parseDate
 import com.bingxuan.taskmanagement.ui.theme.TaskManagementTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import java.util.*
 
-class MainPageViewModel(val context: Context) {
-    val database: TaskDatabase = TaskDatabase.getDatabase(context = context)
+class MainPageViewModel(context: Context, scope: CoroutineScope) : ViewModel() {
+    private val dao: TaskDao = TaskDatabase.getDatabase(context = context).getDao()
+
+    val taskList: StateFlow<List<Task>> = dao.getTasksOrderById().stateIn(
+        scope = scope, SharingStarted.WhileSubscribed(), initialValue = listOf()
+    )
 }
+
 
 @Composable
 fun MainPage(navController: NavHostController, context: Context) {
     var searchQuery by remember { mutableStateOf("") }
-    val taskList by remember {
-        mutableStateOf(
-            mutableStateListOf(
-                Task(name = "this is a task", completed = false),
-                Task(name = "this is also a task", completed = false),
-                Task(name = "this is a completed task", completed = true),
-            )
-        )
-    }
+    val viewModel = MainPageViewModel(context = context, scope = rememberCoroutineScope())
+    val state = viewModel.taskList.collectAsState()
 
     TaskManagementTheme {
         Scaffold(topBar = {
@@ -48,7 +55,7 @@ fun MainPage(navController: NavHostController, context: Context) {
             }
         }) { contentPadding ->
             Box(modifier = Modifier.padding(contentPadding)) {
-                TaskItemsContainer(taskList)
+                TaskItemsContainer(state.value)
             }
         }
     }
@@ -77,18 +84,20 @@ private fun SearchBar(searchQuery: String, setSearchQuery: (query: String) -> Un
 }
 
 @Composable
-private fun TaskItemsContainer(taskList: MutableList<Task>) {
+private fun TaskItemsContainer(taskList: List<Task>) {
     LazyColumn {
-        item {
-            taskList.forEachIndexed { index, task ->
-                ListItem(headlineContent = {
-                    Text(task.name)
-                }, trailingContent = {
-                    Checkbox(checked = taskList[index].completed, onCheckedChange = { checked ->
-                        taskList[index] = task.copy(completed = checked)
+        items(taskList) {
+            ListItem(headlineContent = {
+                Text(it.name)
+            }, trailingContent = {
+                Row(verticalAlignment = Alignment.CenterVertically){
+                    Text(it.date?.let { parseDate(Date(it)) } ?: "")
+                    Checkbox(checked = it.completed, onCheckedChange = {
+                        /* TODO() */
                     })
-                })
-            }
+                }
+
+            })
         }
     }
 }
