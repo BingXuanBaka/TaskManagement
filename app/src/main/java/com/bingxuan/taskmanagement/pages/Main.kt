@@ -22,6 +22,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.util.*
 
 class MainPageViewModel(context: Context, scope: CoroutineScope) : ViewModel() {
@@ -30,13 +31,21 @@ class MainPageViewModel(context: Context, scope: CoroutineScope) : ViewModel() {
     val taskList: StateFlow<List<Task>> = dao.getTasksOrderById().stateIn(
         scope = scope, SharingStarted.WhileSubscribed(), initialValue = listOf()
     )
+
+    suspend fun updateTask(task: Task) {
+        dao.update(task)
+    }
 }
 
 
 @Composable
-fun MainPage(navController: NavHostController, context: Context) {
+fun MainPage(
+    navController: NavHostController,
+    context: Context,
+) {
+    val scope = rememberCoroutineScope()
     var searchQuery by remember { mutableStateOf("") }
-    val viewModel = MainPageViewModel(context = context, scope = rememberCoroutineScope())
+    val viewModel = MainPageViewModel(context = context, scope = scope)
     val state = viewModel.taskList.collectAsState()
 
     TaskManagementTheme {
@@ -55,7 +64,16 @@ fun MainPage(navController: NavHostController, context: Context) {
             }
         }) { contentPadding ->
             Box(modifier = Modifier.padding(contentPadding)) {
-                TaskItemsContainer(state.value)
+                TaskItemsContainer(
+                    taskList = state.value,
+                    onTaskChangeCompleted = { completed, task ->
+                        scope.launch {
+                            println(task)
+                            println(completed)
+                            viewModel.updateTask(task.copy(completed = completed))
+                        }
+                    }
+                )
             }
         }
     }
@@ -84,16 +102,19 @@ private fun SearchBar(searchQuery: String, setSearchQuery: (query: String) -> Un
 }
 
 @Composable
-private fun TaskItemsContainer(taskList: List<Task>) {
+private fun TaskItemsContainer(
+    taskList: List<Task>,
+    onTaskChangeCompleted: (completed: Boolean, task: Task) -> Unit
+) {
     LazyColumn {
-        items(taskList) {
+        items(taskList) { task ->
             ListItem(headlineContent = {
-                Text(it.name)
+                Text(task.name)
             }, trailingContent = {
-                Row(verticalAlignment = Alignment.CenterVertically){
-                    Text(it.date?.let { parseDate(Date(it)) } ?: "")
-                    Checkbox(checked = it.completed, onCheckedChange = {
-                        /* TODO() */
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(task.date?.let { parseDate(Date(task.date)) } ?: "")
+                    Checkbox(checked = task.completed, onCheckedChange = {
+                        onTaskChangeCompleted(it, task)
                     })
                 }
 
