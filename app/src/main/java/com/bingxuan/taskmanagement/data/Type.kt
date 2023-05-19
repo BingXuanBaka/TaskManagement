@@ -1,12 +1,6 @@
-package com.bingxuan.taskmanagement
+package com.bingxuan.taskmanagement.data
 
 import java.util.*
-
-data class Task(
-    var name: String,
-    var completed: Boolean,
-    var date: Date? = null,
-)
 
 fun parseDate(date: Date): String{
     val cal = Calendar.getInstance()
@@ -15,27 +9,28 @@ fun parseDate(date: Date): String{
     val days = cal.get(Calendar.DAY_OF_YEAR) + (cal.get(Calendar.YEAR) * 365.25).toInt()
     val currentDays = currentCal.get(Calendar.DAY_OF_YEAR) + (currentCal.get(Calendar.YEAR) * 365.25).toInt()
     val parsedTime =
+        (if(cal.get(Calendar.AM_PM) == 0) "上午 " else "下午 ") +
         "${if(cal.get(Calendar.HOUR) < 10) "0${cal.get(Calendar.HOUR)}" else cal.get(Calendar.HOUR)}:" +
-                "${if(cal.get(Calendar.MINUTE) < 10) "0${cal.get(Calendar.MINUTE)}" else cal.get(Calendar.MINUTE)}"
+        "${if(cal.get(Calendar.MINUTE) < 10) "0${cal.get(Calendar.MINUTE)}" else cal.get(Calendar.MINUTE)}"
 
     if (days - currentDays == 0){
-        return "今天 $parsedTime"
+        return "今天$parsedTime"
     }
 
     if (days - currentDays == -1){
-        return "昨天 $parsedTime"
+        return "昨天$parsedTime"
     }
 
     if (days - currentDays == -2){
-        return "前天 $parsedTime"
+        return "前天$parsedTime"
     }
 
     if (days - currentDays == 1){
-        return "明天 $parsedTime"
+        return "明天$parsedTime"
     }
 
     if (days - currentDays == 2){
-        return "后天 $parsedTime"
+        return "后天$parsedTime"
     }
 
     return "${cal.get(Calendar.YEAR)}/${cal.get(Calendar.MONTH) + 1}/${cal.get(Calendar.DAY_OF_MONTH)} $parsedTime"

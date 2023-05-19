@@ -1,5 +1,6 @@
 package com.bingxuan.taskmanagement
 
+import android.content.Context
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -24,7 +25,10 @@ class MainActivity : ComponentActivity() {
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
         )
+
         setContent {
+
+            val appContext: Context = applicationContext
             val navController = rememberNavController()
 
             TaskManagementTheme {
@@ -32,8 +36,8 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
                 ) {
                     NavHost(navController = navController, startDestination = "main") {
-                        composable("main") { MainPage(navController = navController) }
-                        composable("add") { AddPage(navController = navController) }
+                        composable("main") { MainPage(navController = navController, context = appContext) }
+                        composable("add") { AddPage(navController = navController, context = appContext) }
                     }
                 }
             }

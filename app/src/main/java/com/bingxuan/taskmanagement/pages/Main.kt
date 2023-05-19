@@ -1,5 +1,6 @@
 package com.bingxuan.taskmanagement.pages
 
+import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
@@ -9,12 +10,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.bingxuan.taskmanagement.R
-import com.bingxuan.taskmanagement.Task
+import com.bingxuan.taskmanagement.data.Task
+import com.bingxuan.taskmanagement.data.TaskDatabase
 import com.bingxuan.taskmanagement.ui.theme.TaskManagementTheme
 import java.util.*
 
+class MainPageViewModel(val context: Context) {
+    val database: TaskDatabase = TaskDatabase.getDatabase(context = context)
+}
+
 @Composable
-fun MainPage(navController: NavHostController) {
+fun MainPage(navController: NavHostController, context: Context) {
     var searchQuery by remember { mutableStateOf("") }
     val taskList by remember {
         mutableStateOf(

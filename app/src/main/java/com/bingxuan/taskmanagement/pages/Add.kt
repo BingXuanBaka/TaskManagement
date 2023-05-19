@@ -1,5 +1,6 @@
 package com.bingxuan.taskmanagement.pages
 
+import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -10,22 +11,34 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.bingxuan.taskmanagement.R
-import com.bingxuan.taskmanagement.parseDate
-import java.util.*
+import com.bingxuan.taskmanagement.data.Task
+import com.bingxuan.taskmanagement.data.TaskDao
+import com.bingxuan.taskmanagement.data.TaskDatabase
+import com.bingxuan.taskmanagement.data.parseDate
+import kotlinx.coroutines.launch
+import java.util.Date
+
+
+class AddPageViewModel(context: Context) {
+    private val dao: TaskDao = TaskDatabase.getDatabase(context = context).getDao()
+
+    var name by mutableStateOf("")
+    var date: Date? by mutableStateOf(null)
+    suspend fun insertTask() {
+        println(name != "")
+        dao.insert(Task(name = name, date = date?.time))
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddPage(navController: NavController) {
-    var name by remember {
-        mutableStateOf("")
-    }
+fun AddPage(navController: NavHostController, context: Context) {
+    val viewModel = AddPageViewModel(context = context)
 
-    var date: Date? by remember {
-        mutableStateOf(null)
-    }
 
+    val coroutineScope = rememberCoroutineScope()
     Scaffold(topBar = {
         TopAppBar(title = { Text("新增代办") }, navigationIcon = {
             IconButton(onClick = { navController.popBackStack() }) {
@@ -41,35 +54,61 @@ fun AddPage(navController: NavController) {
         Box(
             modifier = Modifier.padding(padding),
         ) {
-
-            Column(
-                modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End
-            ) {
-                OutlinedTextField(value = name,
-                    modifier = Modifier
-                        .padding(12.dp)
-                        .fillMaxWidth(),
-                    label = { Text("名称") },
-                    onValueChange = { value -> name = value })
-
-                OptionsList(date) { newDate -> date = newDate }
-
-                Row(
-                    modifier = Modifier.padding(12.dp),
-                ) {
-                    Button(
-                        onClick = { /*TODO*/ }, enabled = name != ""
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_add_24),
-                            contentDescription = "添加"
-                        )
-                        Text("添加")
+            AddPageBody(name = viewModel.name,
+                setName = { viewModel.name = it },
+                date = viewModel.date,
+                setDate = { viewModel.date = it },
+                addButtonDisabled = viewModel.name == "",
+                onAddButtonClicked = {
+                    coroutineScope.launch {
+                        viewModel.insertTask()
+                        navController.popBackStack()
                     }
-                }
-            }
+                })
 
         }
+
+    }
+}
+
+@Composable
+fun AddPageBody(
+    name: String,
+    setName: (name: String) -> Unit,
+    date: Date?,
+    setDate: (date: Date?) -> Unit,
+    addButtonDisabled: Boolean,
+    onAddButtonClicked: () -> Unit,
+) {
+
+    Column(
+        modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End
+    ) {
+        OutlinedTextField(value = name,
+            modifier = Modifier
+                .padding(11.dp)
+                .fillMaxWidth(),
+            label = { Text("名称") },
+            onValueChange = { setName(it) })
+
+        OptionsList(date) { setDate(it) }
+
+        Row(
+            modifier = Modifier.padding(11.dp),
+        ) {
+            Button(
+                onClick = {
+                    onAddButtonClicked()
+                }, enabled = !addButtonDisabled
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.baseline_add_24),
+                    contentDescription = "添加"
+                )
+                Text("添加")
+            }
+        }
+
     }
 }
 
