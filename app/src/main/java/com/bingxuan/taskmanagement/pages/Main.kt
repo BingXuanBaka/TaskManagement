@@ -1,6 +1,7 @@
 package com.bingxuan.taskmanagement.pages
 
 import android.content.Context
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,6 +10,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavHostController
@@ -72,8 +75,7 @@ fun MainPage(
                             println(completed)
                             viewModel.updateTask(task.copy(completed = completed))
                         }
-                    }
-                )
+                    })
             }
         }
     }
@@ -84,7 +86,7 @@ fun MainPage(
 private fun SearchBar(searchQuery: String, setSearchQuery: (query: String) -> Unit) {
     SearchBar(
         modifier = Modifier
-            .padding(12.dp, 0.dp)
+            .padding(24.dp, 0.dp)
             .fillMaxWidth(),
         query = searchQuery,
         onQueryChange = { content -> setSearchQuery(content) },
@@ -103,22 +105,40 @@ private fun SearchBar(searchQuery: String, setSearchQuery: (query: String) -> Un
 
 @Composable
 private fun TaskItemsContainer(
-    taskList: List<Task>,
-    onTaskChangeCompleted: (completed: Boolean, task: Task) -> Unit
+    taskList: List<Task>, onTaskChangeCompleted: (completed: Boolean, task: Task) -> Unit
 ) {
-    LazyColumn {
+    LazyColumn(modifier = Modifier.fillMaxWidth()) {
         items(taskList) { task ->
-            ListItem(headlineContent = {
-                Text(task.name)
-            }, trailingContent = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(task.date?.let { parseDate(Date(task.date)) } ?: "")
+            ListItem(modifier = Modifier
+                .fillMaxWidth()
+                .padding(0.dp)
+                .clickable {
+                    onTaskChangeCompleted(!task.completed, task)
+                }, headlineContent = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Checkbox(checked = task.completed, onCheckedChange = {
                         onTaskChangeCompleted(it, task)
                     })
+                    Text(
+                        task.name,
+                        textDecoration = if (task.completed) TextDecoration.LineThrough else TextDecoration.None
+                    )
                 }
-
+            }, trailingContent = {
+                Text(task.date?.let { parseDate(Date(task.date)) } ?: "")
             })
         }
     }
+}
+
+@Preview
+@Composable
+fun TaskItemsContainerPreview() {
+    TaskItemsContainer(taskList = listOf(
+        Task(name = "test"),
+        Task(name = "test", completed = true),
+        Task(name = "test"),
+    ), onTaskChangeCompleted = { _, _ -> })
 }
