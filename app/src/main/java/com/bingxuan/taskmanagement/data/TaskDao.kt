@@ -28,5 +28,5 @@ interface TaskDao {
     fun getTasksOrderByName(): Flow<List<Task>>
 
     @Query("SELECT * FROM task WHERE id = :id LIMIT 1")
-    fun getTaskByID(id: Int): Task?
+    fun getTaskByID(id: Int): Flow<Task?>
 }

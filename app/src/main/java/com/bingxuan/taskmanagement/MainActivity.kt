@@ -13,7 +13,9 @@ import androidx.core.view.WindowCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.bingxuan.taskmanagement.ui.pages.AddPage
+import com.bingxuan.taskmanagement.ui.pages.EditPage
 import com.bingxuan.taskmanagement.ui.pages.MainPage
 import com.bingxuan.taskmanagement.ui.theme.TaskManagementTheme
 
@@ -36,8 +38,28 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
                 ) {
                     NavHost(navController = navController, startDestination = "main") {
-                        composable("main") { MainPage(navController = navController, context = appContext) }
-                        composable("add") { AddPage(navController = navController, context = appContext) }
+                        composable("main") {
+                            MainPage(
+                                navController = navController,
+                                context = appContext
+                            )
+                        }
+                        composable("add") {
+                            AddPage(
+                                navController = navController,
+                                context = appContext
+                            )
+                        }
+                        composable(
+                            "edit/{taskID}",
+                            arguments = listOf(navArgument("taskID") { defaultValue = 0 })
+                        ) {
+                            EditPage(
+                                navController = navController,
+                                context = appContext,
+                                taskID = it.arguments?.getInt("taskID") ?: 0
+                            )
+                        }
                     }
                 }
             }

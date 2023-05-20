@@ -3,10 +3,32 @@ package com.bingxuan.taskmanagement.ui.pages
 import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -17,62 +39,84 @@ import com.bingxuan.taskmanagement.data.Task
 import com.bingxuan.taskmanagement.data.TaskDao
 import com.bingxuan.taskmanagement.data.TaskDatabase
 import com.bingxuan.taskmanagement.data.parseDate
+import com.bingxuan.taskmanagement.ui.ConfirmDialog
 import com.bingxuan.taskmanagement.ui.DateDialog
 import com.bingxuan.taskmanagement.ui.TimeDialog
 import com.bingxuan.taskmanagement.ui.TopBar
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import java.util.Date
 
-class AddPageViewModel(context: Context) {
-    private val dao: TaskDao = TaskDatabase.getDatabase(context = context).getDao()
-
-    var name by mutableStateOf("")
-    var date: Date? by mutableStateOf(null)
-    suspend fun insertTask() {
-        println(name != "")
-        dao.insert(Task(name = name, date = date?.time))
-    }
-}
-
 @Composable
-fun AddPage(navController: NavHostController, context: Context) {
-    val viewModel = AddPageViewModel(context = context)
-
-
+fun EditPage(navController: NavHostController, context: Context, taskID: Int) {
     val coroutineScope = rememberCoroutineScope()
+    val dao: TaskDao = TaskDatabase.getDatabase(context = context).getDao()
+
+    suspend fun updateTask(task: Task) = dao.update(task = task)
+    suspend fun deleteTask(task: Task) = dao.delete(task = task)
+
+    var currentTask: Task? by remember { mutableStateOf(null) }
+    var confirmDeleteDialogOpen: Boolean by remember { mutableStateOf(false) }
+
+    LaunchedEffect(taskID) {
+        val task = dao.getTaskByID(taskID).firstOrNull()
+        currentTask = task
+    }
+
     Scaffold(topBar = {
-        TopBar(title = "添加待办", navController = navController)
+        TopBar(title = "编辑待办", navController = navController)
     }) { padding ->
         Box(
             modifier = Modifier.padding(padding),
         ) {
-            AddPageBody(name = viewModel.name,
-                setName = { viewModel.name = it },
-                date = viewModel.date,
-                setDate = { viewModel.date = it },
-                addButtonDisabled = viewModel.name == "",
-                onAddButtonClicked = {
-                    coroutineScope.launch {
-                        viewModel.insertTask()
-                        navController.popBackStack()
-                    }
-                })
+            currentTask?.let { task ->
+                EditPageBody(name = task.name,
+                    setName = { currentTask = task.copy(name = it) },
+                    date = task.date?.let { Date(it) },
+                    setDate = { currentTask = task.copy(date = it?.time) },
+                    confirmButtonDisabled = task.name == "",
+                    onConfirmButtonClicked = {
+                        coroutineScope.launch {
+                            updateTask(task)
+                            navController.popBackStack()
+                        }
+                    },
+                    onDeleteButtonClicked = {
+                        confirmDeleteDialogOpen = true
+                    })
 
+                ConfirmDialog(open = confirmDeleteDialogOpen,
+                    title = "删除",
+                    description = "您确定要删除这个待办事项吗？",
+                    onConfirm = {
+                        coroutineScope.launch {
+                            confirmDeleteDialogOpen = false
+                            deleteTask(task)
+                            navController.popBackStack()
+                        }
+                    },
+                    onDismiss = {
+                        confirmDeleteDialogOpen = false
+                    })
+            } ?: Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) { CircularProgressIndicator() }
         }
-
     }
 }
 
 @Composable
-fun AddPageBody(
+fun EditPageBody(
     name: String,
     setName: (name: String) -> Unit,
     date: Date?,
     setDate: (date: Date?) -> Unit,
-    addButtonDisabled: Boolean,
-    onAddButtonClicked: () -> Unit,
+    confirmButtonDisabled: Boolean,
+    onConfirmButtonClicked: () -> Unit,
+    onDeleteButtonClicked: () -> Unit,
 ) {
-
     Column(
         modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End
     ) {
@@ -86,18 +130,28 @@ fun AddPageBody(
         OptionsList(date) { setDate(it) }
 
         Row(
-            modifier = Modifier.padding(11.dp),
+            modifier = Modifier.padding(11.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            TextButton(onClick = {
+                onDeleteButtonClicked()
+            }) {
+                Icon(
+                    painter = painterResource(id = R.drawable.baseline_delete_24),
+                    contentDescription = "删除"
+                )
+                Text("删除待办")
+            }
+
             Button(
                 onClick = {
-                    onAddButtonClicked()
-                }, enabled = !addButtonDisabled
+                    onConfirmButtonClicked()
+                }, enabled = !confirmButtonDisabled
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.baseline_add_24),
-                    contentDescription = "添加"
+                    painter = painterResource(id = R.drawable.baseline_check_24),
+                    contentDescription = "确定"
                 )
-                Text("添加")
+                Text("确定")
             }
         }
 

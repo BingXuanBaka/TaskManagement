@@ -75,6 +75,8 @@ fun MainPage(
                             println(completed)
                             viewModel.updateTask(task.copy(completed = completed))
                         }
+                    }, onTaskPressed = {
+                        navController.navigate("edit/${it.id}")
                     })
             }
         }
@@ -105,7 +107,9 @@ private fun SearchBar(searchQuery: String, setSearchQuery: (query: String) -> Un
 
 @Composable
 private fun TaskItemsContainer(
-    taskList: List<Task>, onTaskChangeCompleted: (completed: Boolean, task: Task) -> Unit
+    taskList: List<Task>,
+    onTaskChangeCompleted: (completed: Boolean, task: Task) -> Unit,
+    onTaskPressed: (task: Task) -> Unit
 ) {
     LazyColumn(modifier = Modifier.fillMaxWidth()) {
         items(taskList) { task ->
@@ -113,7 +117,7 @@ private fun TaskItemsContainer(
                 .fillMaxWidth()
                 .padding(0.dp)
                 .clickable {
-                    onTaskChangeCompleted(!task.completed, task)
+                    onTaskPressed(task)
                 }, headlineContent = {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
@@ -140,5 +144,5 @@ fun TaskItemsContainerPreview() {
         Task(name = "test"),
         Task(name = "test", completed = true),
         Task(name = "test"),
-    ), onTaskChangeCompleted = { _, _ -> })
+    ), onTaskChangeCompleted = { _, _ -> }, onTaskPressed = {})
 }
