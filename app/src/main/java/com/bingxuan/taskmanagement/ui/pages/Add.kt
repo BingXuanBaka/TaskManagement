@@ -1,4 +1,4 @@
-package com.bingxuan.taskmanagement.pages
+package com.bingxuan.taskmanagement.ui.pages
 
 import android.content.Context
 import androidx.compose.foundation.clickable
@@ -17,9 +17,11 @@ import com.bingxuan.taskmanagement.data.Task
 import com.bingxuan.taskmanagement.data.TaskDao
 import com.bingxuan.taskmanagement.data.TaskDatabase
 import com.bingxuan.taskmanagement.data.parseDate
+import com.bingxuan.taskmanagement.ui.DateDialog
+import com.bingxuan.taskmanagement.ui.TimeDialog
+import com.bingxuan.taskmanagement.ui.TopBar
 import kotlinx.coroutines.launch
 import java.util.Date
-
 
 class AddPageViewModel(context: Context) {
     private val dao: TaskDao = TaskDatabase.getDatabase(context = context).getDao()
@@ -32,7 +34,6 @@ class AddPageViewModel(context: Context) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddPage(navController: NavHostController, context: Context) {
     val viewModel = AddPageViewModel(context = context)
@@ -40,16 +41,7 @@ fun AddPage(navController: NavHostController, context: Context) {
 
     val coroutineScope = rememberCoroutineScope()
     Scaffold(topBar = {
-        TopAppBar(title = { Text("新增代办") }, navigationIcon = {
-            IconButton(onClick = { navController.popBackStack() }) {
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_arrow_back_24),
-                    contentDescription = "返回"
-                )
-            }
-        }
-
-        )
+        TopBar(title = "添加待办", navController = navController)
     }) { padding ->
         Box(
             modifier = Modifier.padding(padding),
@@ -162,6 +154,7 @@ private fun DateSelectMenu(
     var dateDialogOpen by remember {
         mutableStateOf(false)
     }
+
     var timeDialogOpen by remember {
         mutableStateOf(false)
     }
@@ -220,56 +213,5 @@ private fun DateSelectMenu(
         }, text = {
             Text("后天")
         })
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DateDialog(
-    open: Boolean, onAccept: (date: Date) -> Unit, onDismiss: () -> Unit
-) {
-    val datePickerState = rememberDatePickerState()
-    if (open) DatePickerDialog(confirmButton = {
-        TextButton(
-            onClick = { onAccept(Date(datePickerState.selectedDateMillis ?: 0)) },
-            enabled = datePickerState.selectedDateMillis != null
-        ) {
-            Text(text = "确定")
-        }
-    }, dismissButton = {
-        TextButton(onClick = onDismiss) {
-            Text(text = "取消")
-        }
-    }, onDismissRequest = onDismiss
-    ) {
-        DatePicker(state = datePickerState)
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun TimeDialog(
-    open: Boolean, onAccept: (hour: Int, minute: Int) -> Unit, onDismiss: () -> Unit
-) {
-    val timePickerState = rememberTimePickerState()
-    if (open) DatePickerDialog(
-        confirmButton = {
-            TextButton(onClick = { onAccept(timePickerState.hour, timePickerState.minute) }) {
-                Text(text = "确定")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = "取消")
-            }
-        },
-
-        onDismissRequest = onDismiss,
-    ) {
-        TimePicker(
-            state = timePickerState, modifier = Modifier
-                .padding(8.dp, 12.dp)
-                .fillMaxWidth()
-        )
     }
 }

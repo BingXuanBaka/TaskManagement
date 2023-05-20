@@ -1,4 +1,4 @@
-package com.bingxuan.taskmanagement.pages
+package com.bingxuan.taskmanagement.ui.pages
 
 import android.content.Context
 import androidx.compose.foundation.clickable

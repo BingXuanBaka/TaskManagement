@@ -13,8 +13,8 @@ import androidx.core.view.WindowCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.bingxuan.taskmanagement.pages.AddPage
-import com.bingxuan.taskmanagement.pages.MainPage
+import com.bingxuan.taskmanagement.ui.pages.AddPage
+import com.bingxuan.taskmanagement.ui.pages.MainPage
 import com.bingxuan.taskmanagement.ui.theme.TaskManagementTheme
 
 class MainActivity : ComponentActivity() {
